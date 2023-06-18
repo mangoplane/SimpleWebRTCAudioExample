@@ -84,11 +84,9 @@ function gotMessageFromServer(message) {
   if (signal.uuid == uuid) return;
 
   if (signal.sdp) {
-    console.log('sdp received')
     peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(() => {
       // Only create answers in response to offers
       if (signal.sdp.type == 'offer') {
-        console.log('sdp type is offer')
         peerConnection.createAnswer().then(createdDescription).catch(errorHandler);
       }
     }).catch(errorHandler);
@@ -104,15 +102,12 @@ function gotIceCandidate(event) {
 }
 
 function createdDescription(description) {
-  console.log('got description');
-
   peerConnection.setLocalDescription(description).then(() => {
     serverConnection.send(JSON.stringify({ 'sdp': peerConnection.localDescription, 'uuid': uuid }));
   }).catch(errorHandler);
 }
 
 function gotRemoteStream(event) {
-  console.log('got remote stream');
   if (!remoteAudio.srcObject) {
     remoteAudio.srcObject = new MediaStream();
   }
