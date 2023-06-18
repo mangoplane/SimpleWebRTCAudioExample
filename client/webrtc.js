@@ -1,7 +1,7 @@
 let localStream;
-let localVideo;
+let localAudio;
 let peerConnection;
-let remoteVideo;
+let remoteAudio;
 let serverConnection;
 let uuid;
 
@@ -15,33 +15,36 @@ const peerConnectionConfig = {
 function pageReady() {
   uuid = createUUID();
 
-  localVideo = document.getElementById('localVideo');
-  remoteVideo = document.getElementById('remoteVideo');
+  localAudio = document.getElementById('localAudio');
+  remoteAudio = document.getElementById('remoteAudio');
 
   serverConnection = new WebSocket(`wss://${window.location.hostname}:8443`);
   serverConnection.onmessage = gotMessageFromServer;
 
-  const constraints = {
-    video: true,
-    audio: true,
-  };
+  // Enumerate microphones and populate the dropdown
+  enumerateDevices();
 
-  if (navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia(constraints).then(getUserMediaSuccess).catch(errorHandler);
-  } else {
-    alert('Your browser does not support getUserMedia API');
-  }
+}
+
+function enumerateDevices() {
+  let micSelect = document.getElementById('micSelect');
+
+  navigator.mediaDevices.enumerateDevices()
+    .then(function (devices) {
+      devices.forEach(function (device) {
+        if (device.kind === 'audioinput') {
+          let option = document.createElement('option');
+          option.text = device.label || 'Microphone ' + (micSelect.length + 1);
+          option.value = device.deviceId;
+          micSelect.appendChild(option);
+        }
+      });
+    })
 }
 
 function getUserMediaSuccess(stream) {
   localStream = stream;
-  localVideo.srcObject = stream;
-}
-
-function start(isCaller) {
-  peerConnection = new RTCPeerConnection(peerConnectionConfig);
-  peerConnection.onicecandidate = gotIceCandidate;
-  peerConnection.ontrack = gotRemoteStream;
+  localAudio.srcObject = stream;
 
   if (localStream) {
     localStream.getTracks().forEach(track => {
@@ -49,11 +52,28 @@ function start(isCaller) {
     });
   }
 
-  if (isCaller) {
-    peerConnection.createOffer().then(createdDescription).catch(errorHandler);
-  }
+  peerConnection.createOffer().then(createdDescription).catch(errorHandler);
 }
 
+function start() {
+  let micSelect = document.getElementById('micSelect');
+  let constraints = {
+    video: false,
+    audio: {
+      deviceId: { exact: micSelect.value }
+    },
+  };
+
+  if (navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia(constraints).then(getUserMediaSuccess).catch(errorHandler);
+  } else {
+    alert('Your browser does not support getUserMedia API');
+  }
+
+  peerConnection = new RTCPeerConnection(peerConnectionConfig);
+  peerConnection.onicecandidate = gotIceCandidate;
+  peerConnection.ontrack = gotRemoteStream;
+}
 
 function gotMessageFromServer(message) {
   if (!peerConnection) start(false);
@@ -93,10 +113,10 @@ function createdDescription(description) {
 
 function gotRemoteStream(event) {
   console.log('got remote stream');
-  if (!remoteVideo.srcObject) {
-    remoteVideo.srcObject = new MediaStream();
+  if (!remoteAudio.srcObject) {
+    remoteAudio.srcObject = new MediaStream();
   }
-  remoteVideo.srcObject.addTrack(event.track);
+  remoteAudio.srcObject.addTrack(event.track);
 }
 
 function errorHandler(error) {
