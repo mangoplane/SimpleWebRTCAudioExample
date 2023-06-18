@@ -1,7 +1,7 @@
 {
-  "name": "WebRTC-Example",
+  "name": "SimpleWebRTCAudioExample",
   "version": "1.0.0",
-  "description": "An 'as simple as it gets' WebRTC example.",
+  "description": "An 'as simple as it gets' WebRTC Audio example.",
   "main": "index.js",
   "scripts": {
     "start": "node server/server.js",
@@ -9,15 +9,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shanet/WebRTC-Example.git"
+    "url": "git+https://github.com/mangoplane/SimpleWebRTCAudioExample"
   },
   "keywords": ["webrtc"],
   "author": "shane tully",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/shanet/WebRTC-Example/issues"
+    "url": "https://github.com/mangoplane/SimpleWebRTCAudioExample/issues"
   },
-  "homepage": "https://github.com/shanet/WebRTC-Example",
+  "homepage": "https://github.com/mangoplane/SimpleWebRTCAudioExample",
   "dependencies": {
     "ws": "^8.13.0"
   }
