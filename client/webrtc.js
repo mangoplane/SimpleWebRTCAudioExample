@@ -42,12 +42,18 @@ function start(isCaller) {
   peerConnection = new RTCPeerConnection(peerConnectionConfig);
   peerConnection.onicecandidate = gotIceCandidate;
   peerConnection.ontrack = gotRemoteStream;
-  peerConnection.addStream(localStream);
+  
+  if (localStream) {
+    localStream.getTracks().forEach(track => {
+      peerConnection.addTrack(track);
+    });
+  }
 
   if(isCaller) {
     peerConnection.createOffer().then(createdDescription).catch(errorHandler);
   }
 }
+
 
 function gotMessageFromServer(message) {
   if(!peerConnection) start(false);
@@ -58,9 +64,11 @@ function gotMessageFromServer(message) {
   if(signal.uuid == uuid) return;
 
   if(signal.sdp) {
+    console.log('sdp received')
     peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(() => {
       // Only create answers in response to offers
       if(signal.sdp.type == 'offer') {
+        console.log('sdp type is offer')
         peerConnection.createAnswer().then(createdDescription).catch(errorHandler);
       }
     }).catch(errorHandler);
@@ -85,7 +93,10 @@ function createdDescription(description) {
 
 function gotRemoteStream(event) {
   console.log('got remote stream');
-  remoteVideo.srcObject = event.streams[0];
+  if (!remoteVideo.srcObject) {
+    remoteVideo.srcObject = new MediaStream();
+  }
+  remoteVideo.srcObject.addTrack(event.track);
 }
 
 function errorHandler(error) {
